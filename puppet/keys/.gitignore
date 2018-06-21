@@ -1,0 +1,2 @@
+certs/*.pem
+private_keys/*.pem

@@ -1,0 +1,27 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+mydomain="contoso.local"
+
+Vagrant.configure(2) do |config|
+  config.vm.box = "bento/ubuntu-16.04"
+  config.vm.hostname = "ub16.#{mydomain}"
+
+  config.vm.provision "shell", inline: <<-SHELL
+    echo 10.10.10.100 puppet.#{mydomain} puppet >> /etc/hosts
+    wget https://apt.puppetlabs.com/puppetlabs-release-pc1-xenial.deb
+    dpkg -i puppetlabs-release-pc1-xenial.deb
+    apt-get update
+    apt-get -y upgrade
+    apt-get -y dist-upgrade
+    apt-get install puppet-agent
+    cp /vagrant/puppet/puppet.conf /etc/puppetlabs/puppet/puppet.conf
+    mkdir -p /etc/puppetlabs/puppet/ssl/private_keys/
+    mkdir -p /etc/puppetlabs/puppet/ssl/cert
+    cp /vagrant/puppet/keys/cert/ub16.#{mydomain}.pem /etc/puppetlabs/puppet/ssl/cert/
+    cp /vagrant/puppet/keys/private_keys/ub16.#{mydomain}.pem /etc/puppetlabs/puppet/ssl/private_keys/
+    chmod 600 /etc/puppetlabs/puppet/ssl/private_keys/ub16.#{mydomain}.pem
+    chmod 600 /etc/puppetlabs/puppet/ssl/cert/ub16.#{mydomain}.pem
+    /opt/puppetlabs/bin/puppet agent -t
+  SHELL
+
+end

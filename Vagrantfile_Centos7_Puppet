@@ -1,0 +1,24 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+mydomain="contoso.local"
+
+Vagrant.configure(2) do |config|
+  config.vm.box = "centos/7"
+  config.vm.hostname = "ce7.#{mydomain}"
+
+  config.vm.provision "shell", inline: <<-SHELL
+    echo 10.10.10.100 puppet.#{mydomain} puppet >> /etc/hosts
+    rpm -ivh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm
+    yum -y update
+    yum -y install puppet-agent
+    cp /vagrant/puppet/puppet.conf /etc/puppetlabs/puppet/puppet.conf
+    mkdir -p /etc/puppetlabs/puppet/ssl/private_keys/
+    mkdir -p /etc/puppetlabs/puppet/ssl/cert
+    cp /vagrant/puppet/keys/cert/ce7.#{mydomain}.pem /etc/puppetlabs/puppet/ssl/cert/
+    cp /vagrant/puppet/keys/private_keys/ce7.#{mydomain}.pem /etc/puppetlabs/puppet/ssl/private_keys/
+    chmod 600 /etc/puppetlabs/puppet/ssl/private_keys/ce7.#{mydomain}.pem
+    chmod 600 /etc/puppetlabs/puppet/ssl/cert/ce7.#{mydomain}.pem
+    /opt/puppetlabs/bin/puppet agent -t
+  SHELL
+
+end
